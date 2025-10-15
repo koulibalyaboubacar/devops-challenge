@@ -1,0 +1,18 @@
+# Ignore Terraform state and cache files
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+*.log
+crash.log
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Docker
+*.tar
+
+# System files
+.DS_Store
+Thumbs.db
