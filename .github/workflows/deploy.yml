@@ -1,0 +1,48 @@
+name: Deploy Flask App to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPO: 692859908834.dkr.ecr.us-east-1.amazonaws.com/flask-app
+      INSTANCE_ID: i-08748b695655e9ca3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t flask-app:latest ./app
+          docker tag flask-app:latest $ECR_REPO:latest
+          docker push $ECR_REPO:latest
+
+      - name: Restart Flask Container via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --comment "Redeploy Flask container" \
+            --parameters 'commands=[
+              "docker rm -f flask-app || true",
+              "docker pull $ECR_REPO:latest",
+              "docker run -d -p 80:5000 --name flask-app $ECR_REPO:latest"
+            ]'
