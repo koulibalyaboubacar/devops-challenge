@@ -131,4 +131,3 @@ Author
 Aboubacar Koulibaly
 DevSecOps & Cloud Security Engineer
 Email: koulibalyaboubacar306@gmail.com
-LinkedIn: https://www.linkedin.com/in/aboubacar-koullibaly/
